@@ -56,8 +56,7 @@ Python (3.9.6).
 | `no-completion-reward` | warning | Completing the focus has no effect. Sometimes intended, often not. |
 
 Checks are deliberately conservative: each one reports only when the script is genuinely
-inconsistent, never when it merely looks unusual. A check that cries wolf gets ignored, and an
-ignored check is worse than no check.
+inconsistent, never when it merely looks unusual.
 
 ## Results on vanilla 1.19.2
 
@@ -74,20 +73,12 @@ Against a clean install of **1.19.2.0 "Operation Postern"** (checksum `d245`) �
 That file carries one closing brace too many. It sits at end of file, after all seven
 `joint_focus` blocks, so no content is lost — the practical effect is an entry in the game's own
 error log rather than missing content. It was confirmed with an independent brace counter that
-does not share code with the parser, because a parser reporting a parse problem is not evidence.
+does not share code with the parser.
 
 Full output in [`examples/vanilla-1.19.2-report.md`](examples/vanilla-1.19.2-report.md), and an
 excerpt of the generated checklist for the 438-focus German tree — 44 exclusive decision points,
 1,092 lines in full — in [`examples/germany-checklist.md`](examples/germany-checklist.md).
 
-## Checks considered and rejected
-
-**`available` without `bypass`.** The idea was to flag focuses that stay available after their
-purpose is already achieved. On vanilla it fired on **4,129 of 10,888 focuses**, or 38% of the
-corpus. A check matching more than a third of everything describes the house style, not a defect,
-so it was removed rather than shipped at low severity. The same reasoning removed a
-`position-collision` finding on `allow_branch` branches, where sharing a grid square is how the
-feature works.
 
 ## Checklist generation
 
@@ -128,14 +119,3 @@ Built with Claude Code. The parser is a hand-checked tokenizer and recursive des
 the Clausewitz script format, kept deliberately small: blocks preserve statement order and
 duplicate keys, because in this format `prerequisite` appearing three times is meaningful rather
 than an error.
-
-Parsing is lenient by default when loading a directory. The game tolerates a stray closing brace
-at file scope, and vanilla ships one, so aborting on it would silently drop seven joint focuses
-and produce a cascade of phantom "unknown focus" errors elsewhere. The recovery is recorded and
-reported as a finding instead — under-reporting coverage while appearing to succeed is the worst
-failure mode available to a QA tool.
-
-Three of the four categories in the first run against real data turned out to be the tool's bugs
-rather than the game's: unhandled `joint_focus` blocks, joint-specific completion reward keys, and
-`allow_branch` branches sharing grid positions by design. They were verified against the game
-files and fixed before anything was reported as a defect.
