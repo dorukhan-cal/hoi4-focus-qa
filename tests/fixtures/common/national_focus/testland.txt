@@ -1,0 +1,148 @@
+# Synthetic focus tree used to exercise the checks.
+# Every defect below is deliberate; the expected findings are listed in
+# tests/test_checks.py. This file contains no game data.
+
+focus_tree = {
+	id = testland_focus
+	country = {
+		factor = 0
+		modifier = {
+			add = 10
+			tag = TST
+		}
+	}
+	default = no
+
+	focus = {
+		id = TST_rearmament
+		icon = GFX_goal_generic_army_doctrines
+		x = 4
+		y = 0
+		cost = 10
+		completion_reward = {
+			army_experience = 5
+		}
+	}
+
+	# Two paths that should exclude each other, but only one side declares it.
+	focus = {
+		id = TST_land_doctrine
+		icon = GFX_goal_generic_army_tanks
+		prerequisite = { focus = TST_rearmament }
+		mutually_exclusive = { focus = TST_naval_doctrine }
+		x = 2
+		y = 1
+		cost = 10
+		completion_reward = {
+			army_experience = 10
+		}
+	}
+
+	focus = {
+		id = TST_naval_doctrine
+		icon = GFX_goal_generic_navy_battleship
+		prerequisite = { focus = TST_rearmament }
+		x = 6
+		y = 1
+		cost = 10
+		completion_reward = {
+			navy_experience = 10
+		}
+	}
+
+	# Requires both halves of an exclusive pair, so it can never be taken.
+	focus = {
+		id = TST_combined_arms
+		prerequisite = { focus = TST_land_doctrine }
+		prerequisite = { focus = TST_naval_doctrine }
+		x = 4
+		y = 2
+		cost = 10
+		completion_reward = {
+			add_political_power = 50
+		}
+	}
+
+	# Points at a focus that does not exist anywhere.
+	focus = {
+		id = TST_expeditionary_force
+		prerequisite = { focus = TST_colonial_office }
+		x = 8
+		y = 2
+		cost = 10
+		completion_reward = {
+			add_manpower = 1000
+		}
+	}
+
+	# Completing this does nothing.
+	focus = {
+		id = TST_war_economy
+		prerequisite = { focus = TST_rearmament }
+		x = 10
+		y = 1
+		cost = 10
+	}
+
+	# Gated but never bypasses, and collides with TST_war_economy on the grid.
+	focus = {
+		id = TST_total_mobilisation
+		prerequisite = { focus = TST_war_economy }
+		available = {
+			has_war = yes
+		}
+		x = 10
+		y = 1
+		cost = 10
+		completion_reward = {
+			add_ideas = idea_total_mobilisation
+		}
+	}
+
+	# A prerequisite loop: neither can ever be taken.
+	focus = {
+		id = TST_first_congress
+		prerequisite = { focus = TST_second_congress }
+		x = 14
+		y = 1
+		cost = 10
+		completion_reward = {
+			add_political_power = 10
+		}
+	}
+
+	focus = {
+		id = TST_second_congress
+		prerequisite = { focus = TST_first_congress }
+		x = 14
+		y = 2
+		cost = 10
+		completion_reward = {
+			add_political_power = 10
+		}
+	}
+
+	# Positioned relative to a focus that does not exist.
+	focus = {
+		id = TST_home_defence
+		prerequisite = { focus = TST_rearmament }
+		relative_position_id = TST_coastal_command
+		x = 1
+		y = 1
+		cost = 10
+		completion_reward = {
+			add_ideas = idea_home_defence
+		}
+	}
+
+	# Duplicate of the entry focus above.
+	focus = {
+		id = TST_rearmament
+		x = 16
+		y = 0
+		cost = 10
+		completion_reward = {
+			army_experience = 5
+		}
+	}
+}
