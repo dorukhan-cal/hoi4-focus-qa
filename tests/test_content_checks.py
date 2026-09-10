@@ -64,6 +64,24 @@ def test_position_check_exempts_allow_branch_and_offset(findings):
     assert _ids(findings, "position-collision") == ["CON_overlap_b", "CON_stub_b"]
 
 
+def test_infrastructure_without_bypass(findings):
+    """Only the capped, fixed-state, unskippable case is reported.
+
+    A bookkeeping `set_state_flag` must not disqualify it; a real bypass, a
+    second reward, an uncapped building and a dynamic scope all must.
+    """
+    assert _ids(findings, "infrastructure-without-bypass") == ["CON_infra_no_bypass"]
+
+
+def test_infrastructure_states_are_collected(data):
+    focus = next(f for f in data.all_focuses if f.id == "CON_infra_no_bypass")
+    assert focus.reward_is_infrastructure_only
+    assert focus.infrastructure_states == ["11", "12"]
+
+    dynamic = next(f for f in data.all_focuses if f.id == "CON_infra_dynamic")
+    assert not dynamic.reward_is_infrastructure_only
+
+
 def test_empty_stub_blocks_do_not_count_as_present(data):
     """Vanilla ships 4,670 empty `bypass = { }` stubs; none is a condition."""
     stub = next(f for f in data.all_focuses if f.id == "CON_stub_a")

@@ -36,6 +36,11 @@ class Focus:
     has_offset: bool = False
     is_shared: bool = False
     is_joint: bool = False
+    # Set when the whole reward is infrastructure construction in a fixed set of
+    # states. Infrastructure is capped, so such a focus can complete with no
+    # effect once those states are already at the cap.
+    reward_is_infrastructure_only: bool = False
+    infrastructure_states: list[str] = field(default_factory=list)
 
     @property
     def loc_key(self) -> str:
@@ -92,6 +97,63 @@ class FocusData:
         return index
 
 
+# Effects that record or display something rather than giving the player
+# anything. A focus is still "infrastructure only" if it also does these.
+_BOOKKEEPING = {
+    "set_state_flag", "set_country_flag", "clr_state_flag", "clr_country_flag",
+    "custom_effect_tooltip", "effect_tooltip", "log", "tooltip",
+    "set_variable", "add_to_variable",
+}
+# Blocks that select a scope rather than granting anything.
+_SCOPES = {
+    "if", "else", "else_if", "limit", "hidden_effect", "owner", "controller",
+    "FROM", "ROOT", "PREV", "THIS",
+}
+
+
+def _infrastructure_only_reward(reward: Block) -> tuple[bool, list[str]]:
+    """Is the entire reward infrastructure construction in a fixed set of states?
+
+    Returns (is_infrastructure_only, state_ids). Rewards that build through a
+    dynamic scope such as `every_owned_state` return False: which states they
+    touch depends on the save, so nothing can be said about them statically.
+    """
+    types: list[str | None] = []
+    states: list[str] = []
+    other = dynamic = False
+
+    def walk(block: Block, state: str | None) -> None:
+        nonlocal other, dynamic
+        for key, _, value in block.statements:
+            if isinstance(value, Block):
+                if key == "add_building_construction":
+                    types.append(value.get_scalar("type"))
+                    if state:
+                        states.append(state)
+                elif key.isdigit():
+                    walk(value, key)
+                elif key.isupper() or key in _SCOPES:
+                    walk(value, state)
+                elif key.startswith(("every_", "random_", "any_", "all_")):
+                    dynamic = True
+                    walk(value, state)
+                elif key not in _BOOKKEEPING:
+                    other = True
+            elif key not in _BOOKKEEPING:
+                other = True
+
+    walk(reward, None)
+
+    ok = (
+        bool(types)
+        and not other
+        and not dynamic
+        and bool(states)
+        and all(t == "infrastructure" for t in types)
+    )
+    return ok, sorted(set(states), key=int)
+
+
 def _extract_focus(
     block: Block,
     tree_id: str,
@@ -131,6 +193,12 @@ def _extract_focus(
         is_shared=is_shared,
         is_joint=is_joint,
     )
+
+    reward = block.get_block("completion_reward")
+    if reward is not None:
+        focus.reward_is_infrastructure_only, focus.infrastructure_states = (
+            _infrastructure_only_reward(reward)
+        )
 
     for prereq in block.get_all("prerequisite"):
         if isinstance(prereq, Block):

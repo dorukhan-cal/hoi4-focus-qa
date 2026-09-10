@@ -59,6 +59,7 @@ Python (3.9.6).
 | `missing-localisation` | error | The focus has no localisation key, so the raw key is shown in game. Respects a `text` override. |
 | `missing-icon` | error | `icon` names a sprite that no `.gfx` file declares, so a placeholder is shown. |
 | `missing-description` | warning | The name is localised but `<key>_desc` is not, so the focus has no description text. |
+| `infrastructure-without-bypass` | warning | The entire reward is infrastructure construction in a fixed set of states, with no bypass. Infrastructure is capped, so the focus completes with no effect once those states are at the cap — and still costs the full focus time. |
 | `no-completion-reward` | warning | Completing the focus has no effect. Sometimes intended, often not. |
 
 Checks are deliberately conservative: each one reports only when the script is genuinely
@@ -94,6 +95,35 @@ the parser.
 against 2,907 distinct declared sprites, and every focus name and description is present — in
 English, and also in French, German and Polish.
 
+**Eight focuses can complete with no effect and cannot skip themselves:**
+
+```
+8 warning(s)
+
+[infrastructure-without-bypass]
+ ~ JAP_public_works                       japan.txt:1185     states 528, 533, 535
+ ~ CHI_rural_reconstruction_movement      china_nationalist.txt:1964   states 602, 605, 607
+ ~ CHI_sea_rural_reconstruction_movement  china_nationalist_warlord_TSR.txt:4282
+ ~ MEX_focus_urban_development            mexico.txt:663     states 277, 477, 478, 485
+ ~ HOL_the_western_possessions            netherlands.txt:91 states 309, 695
+ ~ HOL_the_western_possessions_taog       netherlands.txt:1387
+ ~ TUR_supporting_the_east                turkey.txt:3209    states 344, 350, 352, 353, 354, 800
+ ~ TUR_adana_to_baku_highway              turkey.txt:7654    states 229, 230, 344, 350, 352, 353, 800
+```
+
+Each grants only +1 infrastructure in a fixed set of states, and none has a bypass. Infrastructure
+is capped per state, so once those states are at the cap the focus runs its full duration,
+completes, and changes nothing, with no feedback explaining why.
+
+This is reachable in ordinary play rather than in a contrived save. Nagasaki (528) starts one level
+below the cap, so a single construction there kills a third of `JAP_public_works`. The two Turkish
+focuses overlap on five states — 344, 350, 352, 353 and 800 — so taking both stacks +2 on top of a
+start of 1–2, and eastern Anatolia is exactly where a Turkish player builds infrastructure for
+supply.
+
+Whether that is a defect or accepted design is a designer's call. It is reported as a warning,
+phrased as something to confirm rather than something to fix.
+
 Full output in [`examples/vanilla-1.19.2-report.md`](examples/vanilla-1.19.2-report.md), and an
 excerpt of the generated checklist for the 438-focus German tree — 44 exclusive decision points,
 1,092 lines in full — in [`examples/germany-checklist.md`](examples/germany-checklist.md).
@@ -105,11 +135,14 @@ focuses. A check matching 38% of the corpus describes the house style, not a def
 reasoning exempted `allow_branch` branches from `position-collision`, where sharing a grid square
 is how the feature works.
 
-**Infrastructure-only focuses without a bypass**, proposed to catch focuses that silently do
-nothing. Measured before building: only 7 focuses in the game have a reward consisting solely of
-infrastructure construction, every target state is owned by that country at game start with
-infrastructure at 1–2 against a cap of 5, so none of them can no-op. Rejected. The investigation
-was still worth it — it showed that three quarters of the game's `bypass` blocks are empty
+**Infrastructure-only focuses without a bypass** was first rejected here, on two mistakes worth
+recording. The measurement disqualified any focus that also set a state flag, though a flag is
+bookkeeping for the tooltip rather than a reward; and the conclusion rested on the states starting
+at infrastructure 1–2, well under the cap, which is irrelevant because infrastructure is one of
+the most commonly built things in the game. Corrected on both counts it finds 8 focuses and now
+ships as `infrastructure-without-bypass`.
+
+The detour was still useful: it showed that three quarters of the game's `bypass` blocks are empty
 template stubs, and that this tool was counting them as real conditions.
 
 ## Checklist generation

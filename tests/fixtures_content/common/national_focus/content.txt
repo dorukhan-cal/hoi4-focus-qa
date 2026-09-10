@@ -144,6 +144,111 @@ focus_tree = {
 		completion_reward = { army_experience = 5 }
 	}
 
+	# Entire reward is infrastructure in fixed states, no bypass. The state flag
+	# is bookkeeping for the tooltip and must not disqualify it.
+	focus = {
+		id = CON_infra_no_bypass
+		icon = GFX_con_alpha
+		x = 18
+		y = 0
+		cost = 10
+		completion_reward = {
+			11 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+				set_state_flag = con_infra_done
+			}
+			12 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
+	# Same shape, but it can skip itself. Not reported.
+	focus = {
+		id = CON_infra_with_bypass
+		icon = GFX_con_alpha
+		x = 20
+		y = 0
+		cost = 10
+		bypass = {
+			has_country_flag = con_roads_done
+		}
+		completion_reward = {
+			11 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
+	# Infrastructure plus a real reward: the focus still does something. Not reported.
+	focus = {
+		id = CON_infra_plus_reward
+		icon = GFX_con_alpha
+		x = 22
+		y = 0
+		cost = 10
+		completion_reward = {
+			add_political_power = 50
+			11 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
+	# Construction of something uncapped. Not reported.
+	focus = {
+		id = CON_factory_no_bypass
+		icon = GFX_con_alpha
+		x = 24
+		y = 0
+		cost = 10
+		completion_reward = {
+			11 = {
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
+	# Infrastructure through a dynamic scope: which states it touches depends on
+	# the save, so nothing can be claimed statically. Not reported.
+	focus = {
+		id = CON_infra_dynamic
+		icon = GFX_con_alpha
+		x = 26
+		y = 0
+		cost = 10
+		completion_reward = {
+			every_owned_state = {
+				limit = { is_core_of = CON }
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
 	# Two focuses genuinely overlapping, with none of the three exemptions.
 	# This one must still be reported.
 	focus = {

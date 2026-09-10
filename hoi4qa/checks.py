@@ -427,8 +427,40 @@ def check_icons(data: FocusData) -> list[Finding]:
     ]
 
 
+def check_infrastructure_without_bypass(data: FocusData) -> list[Finding]:
+    """Focuses that can complete with no effect and no way to skip them.
+
+    Infrastructure is capped per state. A focus whose entire reward is
+    infrastructure construction in a fixed set of states does nothing once those
+    states are at the cap -- and with no bypass it still costs the player the
+    full focus time, with no feedback explaining why nothing happened.
+
+    Start values do not make this safe: infrastructure is one of the most
+    commonly built things in the game, and several of these focuses target
+    states that other focuses in the same tree also raise.
+    """
+    findings = []
+    for focus in data.all_focuses:
+        if not focus.reward_is_infrastructure_only or focus.has_bypass:
+            continue
+        states = ", ".join(focus.infrastructure_states)
+        findings.append(
+            Finding(
+                WARNING,
+                "infrastructure-without-bypass",
+                focus.id,
+                focus.tree_id,
+                focus.location,
+                f"entire reward is infrastructure construction in states {states}, and there is "
+                "no bypass -- the focus completes with no effect once those states reach the cap",
+            )
+        )
+    return findings
+
+
 ALL_CHECKS = (
     check_malformed_files,
+    check_infrastructure_without_bypass,
     check_localisation,
     check_icons,
     check_duplicate_ids,
