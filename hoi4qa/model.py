@@ -106,51 +106,50 @@ _BOOKKEEPING = {
 }
 # Blocks that select a scope rather than granting anything.
 _SCOPES = {
-    "if", "else", "else_if", "limit", "hidden_effect", "owner", "controller",
+    "if", "else", "else_if", "hidden_effect", "owner", "controller",
     "FROM", "ROOT", "PREV", "THIS",
 }
 
 
 def _infrastructure_only_reward(reward: Block) -> tuple[bool, list[str]]:
-    """Is the entire reward infrastructure construction in a fixed set of states?
+    """Is the entire reward infrastructure construction?
 
-    Returns (is_infrastructure_only, state_ids). Rewards that build through a
-    dynamic scope such as `every_owned_state` return False: which states they
-    touch depends on the save, so nothing can be said about them statically.
+    Returns (is_infrastructure_only, state_ids). State ids are listed when the
+    reward names them directly; a reward that builds through a dynamic scope
+    such as `every_owned_state` still counts, but comes back with no ids because
+    which states it touches depends on the save.
     """
     types: list[str | None] = []
     states: list[str] = []
-    other = dynamic = False
+    other = False
 
     def walk(block: Block, state: str | None) -> None:
-        nonlocal other, dynamic
+        nonlocal other
         for key, _, value in block.statements:
             if isinstance(value, Block):
+                # `limit` holds triggers that select a scope, not effects.
+                if key == "limit":
+                    continue
                 if key == "add_building_construction":
                     types.append(value.get_scalar("type"))
                     if state:
                         states.append(state)
                 elif key.isdigit():
                     walk(value, key)
-                elif key.isupper() or key in _SCOPES:
-                    walk(value, state)
-                elif key.startswith(("every_", "random_", "any_", "all_")):
-                    dynamic = True
+                elif (
+                    key.isupper()
+                    or key in _SCOPES
+                    or key.startswith(("every_", "random_", "any_", "all_"))
+                ):
                     walk(value, state)
                 elif key not in _BOOKKEEPING:
                     other = True
-            elif key not in _BOOKKEEPING:
+            elif key not in _BOOKKEEPING and key not in ("type", "level", "instant_build", "province"):
                 other = True
 
     walk(reward, None)
 
-    ok = (
-        bool(types)
-        and not other
-        and not dynamic
-        and bool(states)
-        and all(t == "infrastructure" for t in types)
-    )
+    ok = bool(types) and not other and all(t == "infrastructure" for t in types)
     return ok, sorted(set(states), key=int)
 
 

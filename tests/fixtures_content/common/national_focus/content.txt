@@ -229,8 +229,9 @@ focus_tree = {
 		}
 	}
 
-	# Infrastructure through a dynamic scope: which states it touches depends on
-	# the save, so nothing can be claimed statically. Not reported.
+	# Infrastructure through a dynamic scope. Still reported: the states are
+	# unknown, but the focus can still complete with no effect. The trigger in
+	# the `limit` block is a condition, not a reward, and must be ignored.
 	focus = {
 		id = CON_infra_dynamic
 		icon = GFX_con_alpha
@@ -239,7 +240,39 @@ focus_tree = {
 		cost = 10
 		completion_reward = {
 			every_owned_state = {
-				limit = { is_core_of = CON }
+				limit = {
+					free_building_slots = {
+						building = infrastructure
+						size > 0
+					}
+				}
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+	}
+
+	# The same, guarded the way the game's generic infrastructure focus is.
+	# Not reported.
+	focus = {
+		id = CON_infra_dynamic_bypass
+		icon = GFX_con_alpha
+		x = 28
+		y = 0
+		cost = 10
+		bypass = {
+			all_owned_state = {
+				free_building_slots = {
+					building = infrastructure
+					size < 1
+				}
+			}
+		}
+		completion_reward = {
+			every_owned_state = {
 				add_building_construction = {
 					type = infrastructure
 					level = 1

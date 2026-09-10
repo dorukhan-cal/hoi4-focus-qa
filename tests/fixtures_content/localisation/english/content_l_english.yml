@@ -28,6 +28,8 @@ l_english:
  CON_factory_no_bypass_desc:0 "Builds an uncapped building."
  CON_infra_dynamic:0 "Infrastructure Everywhere"
  CON_infra_dynamic_desc:0 "Builds roads through a dynamic scope."
+ CON_infra_dynamic_bypass:0 "Infrastructure Everywhere, Guarded"
+ CON_infra_dynamic_bypass_desc:0 "Builds roads through a dynamic scope and can skip itself."
  CON_overlap_a:0 "Overlap A"
  CON_overlap_a_desc:0 "The first overlapping focus."
  CON_overlap_b:0 "Overlap B"

@@ -438,12 +438,20 @@ def check_infrastructure_without_bypass(data: FocusData) -> list[Finding]:
     Start values do not make this safe: infrastructure is one of the most
     commonly built things in the game, and several of these focuses target
     states that other focuses in the same tree also raise.
+
+    The game's own generic `infrastructure_effort` focus bypasses when every
+    owned state is at the cap, so this is a deviation from the reference
+    implementation rather than a guess about intent.
     """
     findings = []
     for focus in data.all_focuses:
         if not focus.reward_is_infrastructure_only or focus.has_bypass:
             continue
-        states = ", ".join(focus.infrastructure_states)
+        where = (
+            "states " + ", ".join(focus.infrastructure_states)
+            if focus.infrastructure_states
+            else "a dynamically selected scope"
+        )
         findings.append(
             Finding(
                 WARNING,
@@ -451,8 +459,8 @@ def check_infrastructure_without_bypass(data: FocusData) -> list[Finding]:
                 focus.id,
                 focus.tree_id,
                 focus.location,
-                f"entire reward is infrastructure construction in states {states}, and there is "
-                "no bypass -- the focus completes with no effect once those states reach the cap",
+                f"entire reward is infrastructure construction in {where}, and there is no bypass "
+                "-- the focus completes with no effect once that infrastructure is at the cap",
             )
         )
     return findings

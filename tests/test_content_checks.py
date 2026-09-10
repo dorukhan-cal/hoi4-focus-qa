@@ -65,12 +65,16 @@ def test_position_check_exempts_allow_branch_and_offset(findings):
 
 
 def test_infrastructure_without_bypass(findings):
-    """Only the capped, fixed-state, unskippable case is reported.
+    """Reported whether the states are named or selected dynamically.
 
-    A bookkeeping `set_state_flag` must not disqualify it; a real bypass, a
-    second reward, an uncapped building and a dynamic scope all must.
+    A bookkeeping `set_state_flag` and a trigger inside `limit` must not
+    disqualify a focus. A real bypass, a second reward and an uncapped building
+    type all must.
     """
-    assert _ids(findings, "infrastructure-without-bypass") == ["CON_infra_no_bypass"]
+    assert _ids(findings, "infrastructure-without-bypass") == [
+        "CON_infra_dynamic",
+        "CON_infra_no_bypass",
+    ]
 
 
 def test_infrastructure_states_are_collected(data):
@@ -79,7 +83,15 @@ def test_infrastructure_states_are_collected(data):
     assert focus.infrastructure_states == ["11", "12"]
 
     dynamic = next(f for f in data.all_focuses if f.id == "CON_infra_dynamic")
-    assert not dynamic.reward_is_infrastructure_only
+    assert dynamic.reward_is_infrastructure_only
+    assert dynamic.infrastructure_states == []
+
+
+def test_generic_style_bypass_clears_the_finding(data):
+    """The guard the game's own `infrastructure_effort` focus uses."""
+    guarded = next(f for f in data.all_focuses if f.id == "CON_infra_dynamic_bypass")
+    assert guarded.reward_is_infrastructure_only
+    assert guarded.has_bypass
 
 
 def test_empty_stub_blocks_do_not_count_as_present(data):
