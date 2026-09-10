@@ -140,8 +140,6 @@ the cap, so a single construction there kills a third of `JAP_public_works`. The
 overlap on five states — 344, 350, 352, 353 and 800 — so taking both stacks +2 on a start of 1–2,
 and eastern Anatolia is exactly where a Turkish player builds infrastructure for supply.
 
-Whether each case is a defect or accepted design is a designer's call, so it is reported as a
-warning, phrased as something to confirm rather than something to fix.
 
 Full output in [`examples/vanilla-1.19.2-report.md`](examples/vanilla-1.19.2-report.md), and an
 excerpt of the generated checklist for the 438-focus German tree — 44 exclusive decision points,
