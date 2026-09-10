@@ -84,7 +84,7 @@ seconds:
  ! empty.gfx:1                                  block never closed
 ```
 
-**Seven shipped files are malformed.** The focus file carries one closing brace too many, at end
+**Seven files are malformed.** The focus file carries one closing brace too many, at end
 of file after all seven `joint_focus` blocks, so no content is lost. The six `.gfx` files have the
 opposite problem — a root block that is never closed. `empty.gfx` is 112 bytes and simply stops.
 The practical effect in both directions is an entry in the game's own error log rather than
@@ -132,8 +132,7 @@ bypass = {
 }
 ```
 
-Skip the focus when every owned state is at the cap. Six of the 29 have that guard; 23 do not. So
-this is a deviation from the reference implementation rather than a guess about intent.
+Skip the focus when every owned state is at the cap. Six of the 29 have that guard; 23 do not.
 
 It is reachable in ordinary play rather than a contrived save. Nagasaki (528) starts one level below
 the cap, so a single construction there kills a third of `JAP_public_works`. The two Turkish focuses
