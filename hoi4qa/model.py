@@ -114,17 +114,20 @@ def _extract_focus(
         cost=block.get_scalar("cost"),
         icon=block.get_scalar("icon"),
         text=block.get_scalar("text"),
-        has_available=block.has("available"),
-        has_bypass=block.has("bypass"),
+        # `has_content` throughout, not `has`: an empty stub block is not a
+        # condition, and reporting one as present sends testers to verify
+        # something that cannot fire.
+        has_available=block.has_content("available"),
+        has_bypass=block.has_content("bypass"),
         # Joint focuses reward the originating and participating countries
         # separately, so they carry neither plain `completion_reward`.
         has_completion_reward=(
-            block.has("completion_reward")
-            or block.has("completion_reward_joint_originator")
-            or block.has("completion_reward_joint_member")
+            block.has_content("completion_reward")
+            or block.has_content("completion_reward_joint_originator")
+            or block.has_content("completion_reward_joint_member")
         ),
-        has_allow_branch=block.has("allow_branch"),
-        has_offset=block.has("offset"),
+        has_allow_branch=block.has_content("allow_branch"),
+        has_offset=block.has_content("offset"),
         is_shared=is_shared,
         is_joint=is_joint,
     )

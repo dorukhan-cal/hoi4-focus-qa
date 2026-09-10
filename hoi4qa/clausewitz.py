@@ -118,6 +118,24 @@ class Block:
     def has(self, key: str) -> bool:
         return any(k == key for k, _, _ in self.statements)
 
+    def has_content(self, key: str) -> bool:
+        """True when `key` is present *and* carries something.
+
+        Paradox's focus template ships empty `bypass = { }` and `available = { }`
+        stubs and authors routinely leave them in -- three quarters of the bypass
+        blocks in vanilla are never filled. Treating an empty stub as present
+        makes a tool claim conditions exist that cannot be tested.
+        """
+        for k, _, value in self.statements:
+            if k != key:
+                continue
+            if isinstance(value, Block):
+                if value.statements or value.values:
+                    return True
+            else:
+                return True
+        return False
+
 
 def parse(text: str, path: Path | None = None, lenient: bool = False) -> Block:
     """Parse Clausewitz script.

@@ -105,6 +105,13 @@ focuses. A check matching 38% of the corpus describes the house style, not a def
 reasoning exempted `allow_branch` branches from `position-collision`, where sharing a grid square
 is how the feature works.
 
+**Infrastructure-only focuses without a bypass**, proposed to catch focuses that silently do
+nothing. Measured before building: only 7 focuses in the game have a reward consisting solely of
+infrastructure construction, every target state is owned by that country at game start with
+infrastructure at 1–2 against a cap of 5, so none of them can no-op. Rejected. The investigation
+was still worth it — it showed that three quarters of the game's `bypass` blocks are empty
+template stubs, and that this tool was counting them as real conditions.
+
 ## Checklist generation
 
 `--checklist TREE` turns a tree into Markdown with checkboxes, covering:
@@ -150,6 +157,11 @@ than an error.
 Parsing is lenient when loading a directory: vanilla ships files with unbalanced braces, and
 aborting on them would silently drop every definition inside. The recovery is recorded and
 reported as a finding instead.
+
+Empty blocks are treated as absent. The game's focus template ships `bypass = { }` and
+`available = { }` stubs and authors routinely leave them in: 4,670 of 6,174 bypass blocks in
+vanilla are empty. Counting those as conditions made the generated checklists ask testers to
+verify bypasses that cannot fire — 11 such items in the German tree alone.
 
 Most of what the first run against real data reported was the tool's fault, not the game's.
 Unhandled `joint_focus` blocks, joint-specific completion reward keys, and `allow_branch` branches

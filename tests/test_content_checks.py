@@ -57,10 +57,31 @@ def test_missing_icon(findings):
 def test_position_check_exempts_allow_branch_and_offset(findings):
     """The fix for the vanilla false positives, pinned.
 
-    CON_branch_a/b and CON_offset_a/b share grid squares legitimately; only the
-    genuinely overlapping pair should be reported.
+    CON_branch_a/b and CON_offset_a/b share grid squares legitimately. The
+    genuinely overlapping pair is reported, and so is the pair whose
+    allow_branch is an empty stub -- an empty block exempts nothing.
     """
-    assert _ids(findings, "position-collision") == ["CON_overlap_b"]
+    assert _ids(findings, "position-collision") == ["CON_overlap_b", "CON_stub_b"]
+
+
+def test_empty_stub_blocks_do_not_count_as_present(data):
+    """Vanilla ships 4,670 empty `bypass = { }` stubs; none is a condition."""
+    stub = next(f for f in data.all_focuses if f.id == "CON_stub_a")
+    assert not stub.has_bypass
+    assert not stub.has_available
+    assert not stub.has_allow_branch
+
+    real = next(f for f in data.all_focuses if f.id == "CON_branch_a")
+    assert real.has_allow_branch
+
+
+def test_checklist_omits_untestable_bypass_items(data):
+    """A focus whose bypass is an empty stub must not become a test item."""
+    from hoi4qa.checklist import build_checklist, find_tree
+
+    text = "\n".join(build_checklist(find_tree(data, "CON")))
+    assert "CON_stub_a` bypasses" not in text
+    assert "Conditional availability" not in text or "CON_stub_a`:" not in text
 
 
 def test_content_checks_stay_silent_without_localisation_or_sprites():

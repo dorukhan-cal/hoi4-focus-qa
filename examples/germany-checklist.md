@@ -41,7 +41,7 @@ Source: `germany.txt` — 438 focuses
 
 ---
 
-*Excerpt. The full generated checklist for this tree runs to 1,092 lines covering all 44
+*Excerpt. The full generated checklist for this tree runs to over a thousand lines covering all 44
 exclusive decision points, 438 focuses, and the whole-tree passes. Generate it against your own
 installation with:*
 

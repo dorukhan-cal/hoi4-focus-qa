@@ -115,6 +115,35 @@ focus_tree = {
 		completion_reward = { army_experience = 5 }
 	}
 
+	# Empty stub blocks, as the game's own focus template ships them. They are
+	# not conditions: the bypass and available must not count as present, and
+	# the empty allow_branch must not exempt these two from the position check.
+	focus = {
+		id = CON_stub_a
+		icon = GFX_con_alpha
+		x = 16
+		y = 0
+		cost = 10
+		available = {
+		}
+		bypass = {
+		}
+		allow_branch = {
+		}
+		completion_reward = { army_experience = 5 }
+	}
+
+	focus = {
+		id = CON_stub_b
+		icon = GFX_con_alpha
+		x = 16
+		y = 0
+		cost = 10
+		allow_branch = {
+		}
+		completion_reward = { army_experience = 5 }
+	}
+
 	# Two focuses genuinely overlapping, with none of the three exemptions.
 	# This one must still be reported.
 	focus = {
