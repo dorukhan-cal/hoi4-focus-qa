@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .clausewitz import Block, ParseError, parse_file
+import re
+
+from .clausewitz import Block, ParseError, parse_file, read_file
 
 
 @dataclass
@@ -22,6 +24,9 @@ class Focus:
     relative_position_id: str | None = None
     cost: str | None = None
     icon: str | None = None
+    # A focus may point its displayed name at a different localisation key --
+    # usually to avoid colliding with an identically named idea or doctrine.
+    text: str | None = None
     has_available: bool = False
     has_bypass: bool = False
     has_completion_reward: bool = False
@@ -31,6 +36,11 @@ class Focus:
     has_offset: bool = False
     is_shared: bool = False
     is_joint: bool = False
+
+    @property
+    def loc_key(self) -> str:
+        """The localisation key this focus displays under."""
+        return self.text or self.id
 
     @property
     def all_prerequisites(self) -> set[str]:
@@ -62,6 +72,14 @@ class FocusData:
     # (file name, description) for files that parsed only after recovery.
     malformed: list[tuple[str, str]] = field(default_factory=list)
     files_read: int = 0
+    # Populated only when the directory actually ships these. Checks that depend
+    # on them stay silent otherwise, so pointing the tool at a bare focus folder
+    # doesn't produce thousands of phantom "missing" findings.
+    loc_keys: set[str] = field(default_factory=set)
+    loc_language: str = "english"
+    sprite_names: set[str] = field(default_factory=set)
+    has_localisation: bool = False
+    has_sprites: bool = False
 
     @property
     def all_focuses(self) -> list[Focus]:
@@ -95,6 +113,7 @@ def _extract_focus(
         relative_position_id=block.get_scalar("relative_position_id"),
         cost=block.get_scalar("cost"),
         icon=block.get_scalar("icon"),
+        text=block.get_scalar("text"),
         has_available=block.has("available"),
         has_bypass=block.has("bypass"),
         # Joint focuses reward the originating and participating countries
@@ -138,16 +157,80 @@ def _tag_from_country_block(tree_block: Block) -> str | None:
     return None
 
 
-def load_directory(root: Path) -> FocusData:
+_LOC_KEY = re.compile(r'^\s*([A-Za-z0-9_.\-]+):\s*\d*\s*"')
+
+
+def load_localisation(root: Path, language: str = "english") -> set[str]:
+    """Every key defined for `language`.
+
+    Localisation is not Clausewitz script -- it is `KEY:0 "text"` lines under a
+    language header -- so it is read line by line rather than parsed.
+    """
+    keys: set[str] = set()
+    loc_dir = root / "localisation" / language
+    if not loc_dir.is_dir():
+        return keys
+
+    for path in loc_dir.rglob("*.yml"):
+        try:
+            text = read_file(path)
+        except OSError:
+            continue
+        for line in text.splitlines():
+            match = _LOC_KEY.match(line)
+            if match:
+                keys.add(match.group(1))
+    return keys
+
+
+def load_sprites(root: Path) -> tuple[set[str], list[tuple[str, str]]]:
+    """Sprite names declared in any .gfx file, plus any malformed ones found.
+
+    Sprite definitions appear under several block types, so rather than
+    enumerating them this collects every `name` whose value looks like a sprite
+    reference. Over-collecting is the safe direction: it can only suppress a
+    finding, never invent one.
+    """
+    names: set[str] = set()
+    malformed: list[tuple[str, str]] = []
+
+    def collect(block: Block) -> None:
+        for key, _, value in block.statements:
+            if isinstance(value, Block):
+                collect(value)
+            elif key == "name" and value.startswith("GFX_"):
+                names.add(value)
+
+    for path in root.rglob("*.gfx"):
+        try:
+            root_block = parse_file(path, lenient=True)
+        except (ParseError, OSError):
+            continue
+        collect(root_block)
+        for message in root_block.recovered:
+            malformed.append((path.name, message))
+
+    return names, malformed
+
+
+def load_directory(root: Path, language: str = "english") -> FocusData:
     """Load every focus tree under `root/common/national_focus` (or `root` itself)."""
     focus_dir = root / "common" / "national_focus"
     if not focus_dir.is_dir():
         focus_dir = root
 
-    data = FocusData()
+    data = FocusData(loc_language=language)
     if not focus_dir.is_dir():
         data.parse_errors.append(f"no such directory: {focus_dir}")
         return data
+
+    data.loc_keys = load_localisation(root, language)
+    data.has_localisation = bool(data.loc_keys)
+
+    if any(root.rglob("*.gfx")):
+        data.sprite_names, gfx_malformed = load_sprites(root)
+        data.has_sprites = bool(data.sprite_names)
+        data.malformed.extend(gfx_malformed)
 
     for path in sorted(focus_dir.rglob("*.txt")):
         try:

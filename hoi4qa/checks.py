@@ -370,8 +370,67 @@ def check_malformed_files(data: FocusData) -> list[Finding]:
     ]
 
 
+def check_localisation(data: FocusData) -> list[Finding]:
+    """Focuses whose displayed name or description has no localisation key.
+
+    The key is not always the focus id: a `text` field overrides it, usually to
+    avoid colliding with an identically named idea or doctrine. Checking the id
+    blindly reports every one of those as missing.
+    """
+    if not data.has_localisation:
+        return []
+
+    findings = []
+    for focus in data.all_focuses:
+        key = focus.loc_key
+        if key not in data.loc_keys:
+            findings.append(
+                Finding(
+                    ERROR,
+                    "missing-localisation",
+                    focus.id,
+                    focus.tree_id,
+                    focus.location,
+                    f"no {data.loc_language} key '{key}' -- the raw key will be shown in game",
+                )
+            )
+        elif f"{key}_desc" not in data.loc_keys:
+            findings.append(
+                Finding(
+                    WARNING,
+                    "missing-description",
+                    focus.id,
+                    focus.tree_id,
+                    focus.location,
+                    f"no {data.loc_language} key '{key}_desc' -- the focus has no description text",
+                )
+            )
+    return findings
+
+
+def check_icons(data: FocusData) -> list[Finding]:
+    """Focuses whose icon does not resolve to a declared sprite."""
+    if not data.has_sprites:
+        return []
+
+    return [
+        Finding(
+            ERROR,
+            "missing-icon",
+            focus.id,
+            focus.tree_id,
+            focus.location,
+            f"icon '{focus.icon}' is not declared in any .gfx file -- a placeholder will be shown",
+        )
+        for focus in data.all_focuses
+        if focus.icon and focus.icon not in data.sprite_names
+    ]
+
+
 ALL_CHECKS = (
     check_malformed_files,
+    check_localisation,
+    check_icons,
     check_duplicate_ids,
     check_dangling_references,
     check_self_references,

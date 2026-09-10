@@ -103,6 +103,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--checklist", metavar="TREE", help="Generate a test checklist for a tree id or country tag")
     parser.add_argument("--list-trees", action="store_true", help="List the trees found and exit")
+    parser.add_argument(
+        "--language",
+        default="english",
+        help="Localisation language to check against (default: english). "
+        "Run it against french or german to find keys that were never translated.",
+    )
     parser.add_argument("--format", choices=("text", "md"), default="text")
     parser.add_argument("--severity", choices=_SEVERITIES, default=WARNING, help="Minimum severity to report")
     parser.add_argument("-o", "--output", help="Write to this file instead of stdout")
@@ -113,7 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    data = load_directory(args.directory)
+    data = load_directory(args.directory, language=args.language)
 
     if not data.files_read and data.parse_errors:
         print("\n".join(data.parse_errors), file=sys.stderr)

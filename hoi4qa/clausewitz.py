@@ -122,10 +122,11 @@ class Block:
 def parse(text: str, path: Path | None = None, lenient: bool = False) -> Block:
     """Parse Clausewitz script.
 
-    With `lenient=True`, a stray closing brace at file scope is skipped and
-    recorded rather than aborting the parse. The game tolerates this, so
-    rejecting the whole file would lose every definition after it -- and
-    silently under-reporting is the worst thing a QA tool can do.
+    With `lenient=True`, two kinds of malformed input are recovered from and
+    recorded rather than aborting the parse: a stray closing brace at file
+    scope, and a block left unterminated at end of file. Vanilla ships both, the
+    game tolerates both, and rejecting those files would lose every definition
+    inside them -- silently under-reporting is the worst thing a QA tool can do.
     """
     tokens = tokenize(text, path)
     pos = 0
@@ -180,7 +181,9 @@ def parse(text: str, path: Path | None = None, lenient: bool = False) -> Block:
                 pos += 1
 
         if not is_root:
-            raise ParseError("unterminated block", path, open_line)
+            if not lenient:
+                raise ParseError("unterminated block", path, open_line)
+            recovered.append(f"line {open_line}: block never closed, terminated at end of file")
         return block
 
     root = parse_block(True, 1)

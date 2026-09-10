@@ -1,0 +1,137 @@
+# Fixture for the localisation, icon and position-skip checks.
+# Deliberate defects are listed in tests/test_content_checks.py. No game data.
+
+focus_tree = {
+	id = content_focus
+	country = {
+		factor = 0
+		modifier = {
+			add = 10
+			tag = CON
+		}
+	}
+
+	# Clean: localised, described, icon declared.
+	focus = {
+		id = CON_alpha
+		icon = GFX_con_alpha
+		x = 0
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Displays under an overridden key. CON_beta itself is not localised and
+	# must not be reported; con_beta_display is.
+	focus = {
+		id = CON_beta
+		text = con_beta_display
+		icon = GFX_con_alpha
+		x = 2
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	# No localisation at all.
+	focus = {
+		id = CON_gamma
+		icon = GFX_con_alpha
+		x = 4
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Localised, but no description.
+	focus = {
+		id = CON_delta
+		icon = GFX_con_alpha
+		x = 6
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Icon that no .gfx file declares.
+	focus = {
+		id = CON_epsilon
+		icon = GFX_con_undeclared
+		x = 8
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Two branches sharing a grid position, gated so only one is ever shown.
+	# This is how the feature works and must not be reported.
+	focus = {
+		id = CON_branch_a
+		icon = GFX_con_alpha
+		x = 10
+		y = 0
+		cost = 10
+		allow_branch = { has_country_flag = con_branch_a }
+		completion_reward = { army_experience = 5 }
+	}
+
+	focus = {
+		id = CON_branch_b
+		icon = GFX_con_alpha
+		x = 10
+		y = 0
+		cost = 10
+		allow_branch = { has_country_flag = con_branch_b }
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Two focuses sharing a grid position, repositioned per country by offset.
+	# Also must not be reported.
+	focus = {
+		id = CON_offset_a
+		icon = GFX_con_alpha
+		x = 12
+		y = 0
+		cost = 10
+		offset = {
+			x = -4
+			y = 0
+			trigger = { tag = CON }
+		}
+		completion_reward = { army_experience = 5 }
+	}
+
+	focus = {
+		id = CON_offset_b
+		icon = GFX_con_alpha
+		x = 12
+		y = 0
+		cost = 10
+		offset = {
+			x = 4
+			y = 0
+			trigger = { tag = CON }
+		}
+		completion_reward = { army_experience = 5 }
+	}
+
+	# Two focuses genuinely overlapping, with none of the three exemptions.
+	# This one must still be reported.
+	focus = {
+		id = CON_overlap_a
+		icon = GFX_con_alpha
+		x = 14
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+
+	focus = {
+		id = CON_overlap_b
+		icon = GFX_con_alpha
+		x = 14
+		y = 0
+		cost = 10
+		completion_reward = { army_experience = 5 }
+	}
+}

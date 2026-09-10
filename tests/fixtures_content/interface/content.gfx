@@ -1,0 +1,12 @@
+spriteTypes = {
+
+	SpriteType = {
+		name = "GFX_con_alpha"
+		texturefile = "gfx/interface/goals/con_alpha.dds"
+	}
+
+	SpriteType = {
+		name = "GFX_con_unused"
+		texturefile = "gfx/interface/goals/con_unused.dds"
+	}
+}
