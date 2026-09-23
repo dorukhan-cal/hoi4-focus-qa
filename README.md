@@ -65,34 +65,44 @@ Python (3.9.6).
 Checks are deliberately conservative: each one reports only when the script is genuinely
 inconsistent, never when it merely looks unusual.
 
-## Results on vanilla 1.19.2
+## Results on vanilla 1.19.3
 
-Against a clean install of **1.19.2.0 "Operation Postern"** (checksum `d245`) — 81 focus files,
-67 trees, 10,888 focuses, 129,087 localisation keys and 29,432 sprite declarations, about 7
-seconds:
+Against **1.19.3.0 "Operation Postern"** (build `c01a`, 5632) with every DLC installed (36 DLC
+folders): 81 focus files, 67 trees, 10,948 focuses, 129,541 localisation keys and 32,000 sprite
+declarations, about 4 seconds:
 
 ```
-7 error(s), 23 warning(s), 0 info
+8 error(s), 23 warning(s), 0 info
 
 [malformed-script]
- ! TSR_lingguang_incident_joint_branch.txt:469  unmatched closing brace, skipped
+ ! TSR_lingguang_incident_joint_branch.txt:420  unmatched closing brace, skipped
  ! powerbalanceview.gfx:1                       block never closed, terminated at end of file
  ! WW_meshes_planes.gfx:1                       block never closed
  ! _BfB_meshes_infantry.gfx:1                   block never closed
  ! NSB_infantry.gfx:1                           block never closed
  ! flame_tanks.gfx:1                            block never closed
  ! empty.gfx:1                                  block never closed
+ ! aap_technologies.gfx:1                       block never closed
 ```
 
-**Seven files are malformed.** The focus file carries one closing brace too many, at end
-of file after all seven `joint_focus` blocks, so no content is lost. The six `.gfx` files have the
+**Eight files are malformed.** The focus file carries one closing brace too many, at end
+of file after all seven `joint_focus` blocks, so no content is lost. The seven `.gfx` files have the
 opposite problem — a root block that is never closed. `empty.gfx` is 112 bytes and simply stops.
-The practical effect in both directions is an entry in the game's own error log rather than
-missing content. Each was confirmed with an independent brace counter that shares no code with
-the parser.
+Each was confirmed with an independent brace counter that shares no code with the parser.
 
-**No focus in the game is missing localisation or an icon.** All 10,828 icon references resolve
-against 2,907 distinct declared sprites, and every focus name and description is present — in
+**The game reports none of them.** A `-debug` launch of 1.19.3 reaches the main menu with an
+empty `error.log`, so the parser accepts both an extra top-level `}` and an unclosed root block
+in silence. A static check is the only place these show up.
+
+**What changed since 1.19.2.** The 1.19.3 patch rewrote 12 of the 81 focus files and added 60
+focuses without introducing anything these checks detect. The stray brace in
+`TSR_lingguang_incident_joint_branch.txt` survived the rewrite and moved from line 469 to 420.
+The one new error, `aap_technologies.gfx`, is not new content: it ships with the Allied Armor
+Pack (`dlc029`) and only became visible once that DLC was installed. On 1.19.2 (checksum `d245`,
+fewer DLCs) the run found 7 errors and 23 warnings across 10,888 focuses.
+
+**No focus in the game is missing localisation or an icon.** All 10,888 icon references resolve
+against 2,908 distinct declared sprites, and every focus name and description is present — in
 English, and also in French, German and Polish.
 
 **29 focuses grant nothing but infrastructure. 23 of them cannot skip themselves.**
@@ -108,7 +118,7 @@ Ten name their states directly:
  ~ CHI_rural_reconstruction_movement      china_nationalist.txt:1964    states 602, 605, 607
  ~ CHI_sea_rural_reconstruction_movement  china_nationalist_warlord_TSR.txt:4282
  ~ ITA_litoranea_balbo                    italy.txt:1204      states 448, 449, 450, 451
- ~ RAJ_the_ledo_road                      india_goe.txt:24684 states 432, 434, 990
+ ~ RAJ_the_ledo_road                      india_goe.txt:24690 states 432, 434, 990
  ~ MEX_focus_urban_development            mexico.txt:663      states 277, 477, 478, 485
  ~ HOL_the_western_possessions            netherlands.txt:91  states 309, 695
  ~ HOL_the_western_possessions_taog       netherlands.txt:1387
@@ -140,7 +150,7 @@ overlap on five states — 344, 350, 352, 353 and 800 — so taking both stacks 
 and eastern Anatolia is exactly where a Turkish player builds infrastructure for supply.
 
 
-Full output in [`examples/vanilla-1.19.2-report.md`](examples/vanilla-1.19.2-report.md), and an
+Full output in [`examples/vanilla-1.19.3-report.md`](examples/vanilla-1.19.3-report.md) (1.19.2: [`examples/vanilla-1.19.2-report.md`](examples/vanilla-1.19.2-report.md)), and an
 excerpt of the generated checklist for the 438-focus German tree — 44 exclusive decision points,
 1,092 lines in full — in [`examples/germany-checklist.md`](examples/germany-checklist.md).
 
